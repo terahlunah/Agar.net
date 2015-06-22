@@ -9,10 +9,10 @@ namespace Agar.net
     class Cell
     {
         private uint _id;
-        Vector2i _position;
-        uint _size;
-        Color _color;
-        string _name;
+        private Vector2i _position;
+        private uint _size;
+        private Color _color;
+        private string _name;
 
         public Cell(uint id)
         {
