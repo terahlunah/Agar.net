@@ -21,34 +21,34 @@ namespace Agar.net
 
         }
 
-        public void draw(RenderWindow window)
+        public void Draw(RenderWindow window)
         {
             CircleShape shape = new CircleShape(50);
             shape.FillColor = _color;
             shape.Position = new Vector2f(_position.X - _size, _position.Y - _size);
             shape.Radius = _size;
 
-            window.draw(shape);
+            window.Draw(shape);
         }
 
-        public void setSize(uint size)
+        public void SetSize(uint size)
         {
-            this._size = size;
+            _size = size;
         }
 
-        public void setPosition(Vector2i position)
+        public void SetPosition(Vector2i position)
         {
-            this._position = position;
+            _position = position;
         }
 
-        public void setColor(Color color)
+        public void SetColor(Color color)
         {
-            this._color = color;
+            _color = color;
         }
 
-        public void setName(string name)
+        public void SetName(string name)
         {
-            this._name = name;
+            _name = name;
         }
 
     }

@@ -8,6 +8,9 @@ namespace Agar.net
     class World
     {
         RenderWindow _window;
+
+
+
         public void StartSFMLProgram()
         {
             _window = new RenderWindow(new VideoMode(800, 600), "SFML window");
