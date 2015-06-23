@@ -9,7 +9,7 @@ namespace Agar.net
 {
     class World
     {
-        RenderWindow _window;
+        private RenderWindow _window;
         private Session _sess;
         private Vector2f _position;
         private Vector2f _size;
@@ -26,7 +26,7 @@ namespace Agar.net
             _window = new RenderWindow(new VideoMode(1600, 800), "Agar.io");
             //_sess = new Session(this);
             cells = new Dictionary<uint, Cell>();
-
+            _size = new Vector2f(10000, 10000);
             
         }
 
@@ -63,10 +63,32 @@ namespace Agar.net
         {
             _window.Clear(new Color(20,20,20,255));
 
+            DrawGrid();
+
             foreach (var c in cells)
                 c.Value.Draw(_window);
 
             _window.Display();
+        }
+
+        private void DrawGrid()
+        {
+            RectangleShape line = new RectangleShape();
+            line.FillColor = new Color(50, 50, 50, 200);
+
+            line.Size = new Vector2f(_size.X, 1);
+            for(uint i = 0; i<_size.Y; i += 50)
+            {
+                line.Position = new Vector2f(0,i);
+                _window.Draw(line);
+            }
+
+            line.Size = new Vector2f(1, _size.Y);
+            for (uint i = 0; i < _size.X; i += 50)
+            {
+                line.Position = new Vector2f(i, 0);
+                _window.Draw(line);
+            }
         }
 
 
