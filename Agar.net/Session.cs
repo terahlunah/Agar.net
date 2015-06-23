@@ -2,7 +2,7 @@
 using SFML;
 using SFML.Graphics;
 using SFML.Window;
-using SFML.Network;
+using WebSocketSharp;
 
 namespace Agar.net
 {
@@ -11,7 +11,7 @@ namespace Agar.net
     {
 
 
-       // private WebSocket* _ws;
+        private WebSocket _ws;
         private bool _open;
         private World _world;
 
@@ -19,6 +19,7 @@ namespace Agar.net
         // handlers
         private void process(byte[] data)
         {
+            /*
             uint32 opcode = static_cast<int>(data.get());
             switch (opcode)
             {
@@ -52,10 +53,12 @@ namespace Agar.net
 
                     break;
             }
+            */
         }
 
         private void handleWorldInfo(byte[] data)
         {
+            /*
             std::cout << "World Info";
 
             double worldX = data.getDouble();
@@ -67,10 +70,12 @@ namespace Agar.net
             _world->setSize(sf::Vector2f(worldW, worldH));
 
             std::cout << " # " << worldX << " # " << worldY << " # " << worldW << " # " << worldH << std::endl;
+            */
         }
 
         private void handleFFALeaderboardUpdate(byte[] data)
         {
+            /*
             uint32 count = data.getInt();
 
             for (uint32 i = 0; i < count; ++i)
@@ -78,10 +83,12 @@ namespace Agar.net
                 uint32 score = data.getInt();
                 std::string name = data.getUTF16String();
             }
+            */
         }
 
         private void handleTeamLeaderboardUpdate(byte[] data)
         {
+            /*
             uint32 teamCount = data.getInt();
             std::vector<float> score;
 
@@ -91,15 +98,19 @@ namespace Agar.net
             t0 = score[0];
             t1 = score[1];
             t2 = score[2];
+            */
         }
 
         private void handleAddCell(byte[] data)
         {
+            /*
             std::cout << "Add new cell" << std::endl;
+            */
         }
 
         private void handleUpdateCells(byte[] data)
         {
+            /*
             // Mergers
             uint32 mergeCount = data.getShort();
             for (uint32 i = 0; i < mergeCount; ++i)
@@ -157,29 +168,22 @@ namespace Agar.net
                 uint32 id = data.getInt();
                 _world->removeCell(id);
             }
+
+            */
         }
 
 
         public Session(World world)
         {
-
-            int rc;
-            WSADATA wsaData;
-
-            rc = WSAStartup(MAKEWORD(2, 2), &wsaData);
-            if (rc)
-            {
-                printf("WSAStartup Failed.\n");
-            }
             _open = false;
-            _ws = NULL;
+            _ws = null;
             _world = world;
         }
 
 
         public void FindSession(string mode , string region)
         {
-            
+            /*
             Http http = new Http("http://m.agar.io");
 
             Http.Request request;
@@ -195,11 +199,13 @@ namespace Agar.net
             ss >> url >> key;
 
             connectToServer(url, key);
+            */
 
         }
 
         public void ConnectToServer(string url, string key)
         {
+            /*
             _ws = WebSocket.from_url("ws://" + url, "http://agar.io");
 
             _ws.poll();
@@ -222,10 +228,12 @@ namespace Agar.net
             _open = true;
 
             cout << "Connection opened to " << url << " - " << key << endl;
+            */
         }
 
         public void Spawn(string name = "")
         {
+            /*
             if (!_open)
                 return;
 
@@ -238,11 +246,12 @@ namespace Agar.net
             _ws->sendBinary(buf.asVector());
 
             std::cout << "joined" << std::endl;
-
+            */
         }
 
         public void Spectate()
         {
+            /*
             if (!_open)
                 return;
 
@@ -251,11 +260,13 @@ namespace Agar.net
             _ws->sendBinary(buf.asVector());
 
             std::cout << "spectating" << std::endl;
+            */
         }
 
 
         public void Update()
         {
+            /*
             if (_ws->getReadyState() != easywsclient::WebSocket::CLOSED) // Websocket connection loop
             {
                 _ws->poll();
@@ -274,7 +285,9 @@ namespace Agar.net
                 } while (hasData);
 
             }
+            */
         }
+
         public bool IsOpen()
         {
             return _open;
