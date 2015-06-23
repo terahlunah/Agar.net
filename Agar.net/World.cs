@@ -24,7 +24,7 @@ namespace Agar.net
         public void Init()
         {
             _window = new RenderWindow(new VideoMode(1600, 800), "Agar.io");
-            //_sess = new Session(this);
+            _sess = new Session(this);
             cells = new Dictionary<uint, Cell>();
             _size = new Vector2f(10000, 10000);
             
@@ -32,10 +32,8 @@ namespace Agar.net
 
         public void Run()
         {
-           // _sess.findSession(MODE_FFA, REGION_EU);
+            _sess.FindSession(Mode.FFA, Region.EU);
             //_sess->spectate();
-
-
            
             _window.SetVisible(true);
             _window.Closed += new EventHandler(OnClosed);
@@ -44,8 +42,6 @@ namespace Agar.net
                 Update();
                 Display();
             }
-
-
            
         }
         public void OnClosed(object sender, EventArgs e)

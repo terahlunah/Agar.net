@@ -3,6 +3,9 @@ using SFML;
 using SFML.Graphics;
 using SFML.Window;
 using WebSocketSharp;
+using System.Net;
+using System.IO;
+using System.Text;
 
 namespace Agar.net
 {
@@ -14,6 +17,109 @@ namespace Agar.net
         private WebSocket _ws;
         private bool _open;
         private World _world;
+
+
+
+        public Session(World world)
+        {
+            _open = false;
+            _ws = null;
+            _world = world;
+        }
+
+
+        public void FindSession(string mode, string region)
+        {
+
+            WebRequest request = WebRequest.Create("http://m.agar.io");
+            request.Method = "POST";
+
+            byte[] byteArray = Encoding.UTF8.GetBytes(region + mode);
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = byteArray.Length;
+            Stream dataStream = request.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            WebResponse response = request.GetResponse();
+            dataStream = response.GetResponseStream();
+            StreamReader reader = new StreamReader(dataStream);
+            string[] responseFromServer = reader.ReadToEnd().Split('\n');
+            reader.Close();
+            dataStream.Close();
+            response.Close();
+
+            string url = responseFromServer[0];
+            string key = responseFromServer[1];
+
+            ConnectToServer(url, key);
+
+        }
+
+        public void ConnectToServer(string url, string key)
+        {
+            /*
+            _ws = WebSocket.from_url("ws://" + url, "http://agar.io");
+
+            _ws.poll();
+
+            ByteBuffer buffer;
+            buffer.put(254);
+            buffer.putInt(4);
+            _ws.sendBinary(buffer.asVector());
+
+            buffer.clear();
+            buffer.put(255);
+            buffer.putInt(673720361);
+            _ws.sendBinary(buffer.asVector());
+
+            buffer.clear();
+            buffer.put(80);
+            buffer.putString(key);
+            _ws.sendBinary(buffer.asVector());
+
+            _open = true;
+
+            cout << "Connection opened to " << url << " - " << key << endl;
+            */
+        }
+
+        public void Update()
+        {
+            /*
+            if (_ws->getReadyState() != easywsclient::WebSocket::CLOSED) // Websocket connection loop
+            {
+                _ws->poll();
+                bool hasData = false;
+
+                do
+                {
+                    hasData = false;
+
+                    _ws->dispatchBinary([this, &hasData](const std::vector<uint8_t>&inData)
+            {
+                        process(ByteBuffer(inData));
+                        hasData = true;
+                    });
+
+                } while (hasData);
+
+            }
+            */
+        }
+
+        public bool IsOpen()
+        {
+            return _open;
+        }
+
+
+
+
+
+
+
+
+
 
 
         // handlers
@@ -173,63 +279,7 @@ namespace Agar.net
         }
 
 
-        public Session(World world)
-        {
-            _open = false;
-            _ws = null;
-            _world = world;
-        }
 
-
-        public void FindSession(string mode , string region)
-        {
-            /*
-            Http http = new Http("http://m.agar.io");
-
-            Http.Request request;
-            request.setMethod(Http.Request.Post);
-            request.setUri("/");
-            request.setBody(region + mode);
-
-            Http.Response response = http.sendRequest(request);
-
-            string body = response.getBody();
-            stringstream ss(body);
-            string url, key;
-            ss >> url >> key;
-
-            connectToServer(url, key);
-            */
-
-        }
-
-        public void ConnectToServer(string url, string key)
-        {
-            /*
-            _ws = WebSocket.from_url("ws://" + url, "http://agar.io");
-
-            _ws.poll();
-
-            ByteBuffer buffer;
-            buffer.put(254);
-            buffer.putInt(4);
-            _ws.sendBinary(buffer.asVector());
-
-            buffer.clear();
-            buffer.put(255);
-            buffer.putInt(673720361);
-            _ws.sendBinary(buffer.asVector());
-
-            buffer.clear();
-            buffer.put(80);
-            buffer.putString(key);
-            _ws.sendBinary(buffer.asVector());
-
-            _open = true;
-
-            cout << "Connection opened to " << url << " - " << key << endl;
-            */
-        }
 
         public void Spawn(string name = "")
         {
@@ -264,34 +314,7 @@ namespace Agar.net
         }
 
 
-        public void Update()
-        {
-            /*
-            if (_ws->getReadyState() != easywsclient::WebSocket::CLOSED) // Websocket connection loop
-            {
-                _ws->poll();
-                bool hasData = false;
 
-                do
-                {
-                    hasData = false;
-
-                    _ws->dispatchBinary([this, &hasData](const std::vector<uint8_t>&inData)
-            {
-                        process(ByteBuffer(inData));
-                        hasData = true;
-                    });
-
-                } while (hasData);
-
-            }
-            */
-        }
-
-        public bool IsOpen()
-        {
-            return _open;
-        }
 
    
     }
