@@ -2,10 +2,10 @@
 using SFML;
 using SFML.Graphics;
 using SFML.Window;
-using WebSocketSharp;
 using System.Net;
 using System.IO;
 using System.Text;
+using WebSocketSharp;
 
 namespace Agar.net
 {
@@ -57,30 +57,57 @@ namespace Agar.net
 
         public void ConnectToServer(string url, string key)
         {
-            /*
-            _ws = WebSocket.from_url("ws://" + url, "http://agar.io");
+            Console.WriteLine("opening connection to " + url);
 
-            _ws.poll();
+            _ws = new WebSocket("ws://"+url);
+            _ws.Origin = "http://agar.io";
 
-            ByteBuffer buffer;
-            buffer.put(254);
-            buffer.putInt(4);
-            _ws.sendBinary(buffer.asVector());
+            _ws.OnMessage += (sender, e) => {
+                this.Process(e.RawData);
+            };
 
-            buffer.clear();
-            buffer.put(255);
-            buffer.putInt(673720361);
-            _ws.sendBinary(buffer.asVector());
+            _ws.OnOpen += (sender, e) =>
+            {
+                Console.WriteLine("opened");
+                _open = true;
 
-            buffer.clear();
-            buffer.put(80);
-            buffer.putString(key);
-            _ws.sendBinary(buffer.asVector());
+                this.SendHandShake(key);
 
-            _open = true;
+                Console.WriteLine("Connection opened to " + url + " - " + key);
 
-            cout << "Connection opened to " << url << " - " << key << endl;
-            */
+            };
+
+            _ws.Connect();
+        }
+
+        private void SendHandShake(string key)
+        {
+            {
+                MemoryStream ms = new MemoryStream();
+                BinaryWriter writer = new BinaryWriter(ms);
+
+                writer.Write((byte)254);
+                writer.Write(4);
+                Send(ms.ToArray());
+            }
+
+            {
+                MemoryStream ms = new MemoryStream();
+                BinaryWriter writer = new BinaryWriter(ms);
+
+                writer.Write((byte)255);
+                writer.Write(2207389747);
+                Send(ms.ToArray());
+            }
+
+            {
+                MemoryStream ms = new MemoryStream();
+                BinaryWriter writer = new BinaryWriter(ms);
+
+                writer.Write((byte)80);
+                writer.Write(ASCIIEncoding.ASCII.GetBytes(key));
+                Send(ms.ToArray());
+            }
         }
 
         public void Update()
@@ -114,17 +141,23 @@ namespace Agar.net
 
 
 
+        private void Send(byte[] data)
+        {
+            if (!_open)
+                return;
 
-
-
-
-
+            _ws.Send(data);
+            
+        }
 
 
 
         // handlers
-        private void process(byte[] data)
+        private void Process(byte[] data)
         {
+            Console.WriteLine("Received data !");
+            
+
             /*
             uint32 opcode = static_cast<int>(data.get());
             switch (opcode)

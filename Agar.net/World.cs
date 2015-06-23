@@ -32,7 +32,7 @@ namespace Agar.net
 
         public void Run()
         {
-            _sess.FindSession(Mode.FFA, Region.EU);
+            _sess.FindSession(Mode.TEAM, Region.EU);
             //_sess->spectate();
            
             _window.SetVisible(true);
