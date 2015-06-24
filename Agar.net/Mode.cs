@@ -10,8 +10,8 @@ namespace Agar.net
     {
 
         public static String FFA = "";
-        public static String TEAM = ":teams";
-        public static String EXPERIMENTAL = ":experimental";
+        public static String Team = ":teams";
+        public static String Experimental = ":experimental";
 
     }
 }

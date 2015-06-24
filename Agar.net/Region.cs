@@ -9,10 +9,11 @@ namespace Agar.net
     class Region
     {
 
-        public static String USEAST =  "US-Fremont";
-        public static String USWEST = "US-Atlanta";
+        public static String USEast =  "US-Fremont";
+        public static String USWest = "US-Atlanta";
         public static String EU = "EU-London";
         public static String JP = "JP-Tokyo";
-    
+        public static String RU = "RU-Russia"; 
+        public static String TK = "TK-Turkey";
     }
 }

@@ -9,31 +9,31 @@ namespace Agar.net
     class Cell
     {
         private uint _id;
-        private Vector2i _position;
-        private uint _size;
+        public Vector2i _position;
+        private uint _mass;
         private Color _color;
-        private string _name;
+        public string _name;
+        private float _radius;
 
         public Cell(uint id)
         {
             _id = id;
-            _size = 1;
-
+            _mass = 1;
         }
 
         public void Draw(RenderWindow window)
         {
-            CircleShape shape = new CircleShape(50);
+            CircleShape shape = new CircleShape(_radius, (uint)_radius);
             shape.FillColor = _color;
-            shape.Position = new Vector2f(_position.X - _size, _position.Y - _size);
-            shape.Radius = _size;
+            shape.Position = new Vector2f(_position.X - (ushort)_radius, _position.Y - (ushort)_radius);
 
             window.Draw(shape);
         }
 
-        public void SetSize(uint size)
+        public void SetMass(uint mass)
         {
-            _size = size;
+            _mass = mass;
+            _radius = _mass;// / ((float)Math.PI * (float)Math.PI);
         }
 
         public void SetPosition(Vector2i position)

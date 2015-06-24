@@ -6,6 +6,9 @@ using System.Net;
 using System.IO;
 using System.Text;
 using WebSocketSharp;
+using System.Collections.Generic;
+using SFML.System;
+using System.Threading;
 
 namespace Agar.net
 {
@@ -18,6 +21,8 @@ namespace Agar.net
         private bool _open;
         private World _world;
 
+        private Queue<byte[]> _dataQueue;
+        private Mutex _dataMutex;
 
 
         public Session(World world)
@@ -25,6 +30,8 @@ namespace Agar.net
             _open = false;
             _ws = null;
             _world = world;
+            _dataQueue = new Queue<byte[]>();
+            _dataMutex = new Mutex();
         }
 
 
@@ -63,7 +70,9 @@ namespace Agar.net
             _ws.Origin = "http://agar.io";
 
             _ws.OnMessage += (sender, e) => {
-                this.Process(e.RawData);
+                _dataMutex.WaitOne();
+                _dataQueue.Enqueue(e.RawData);
+                _dataMutex.ReleaseMutex();
             };
 
             _ws.OnOpen += (sender, e) =>
@@ -112,26 +121,12 @@ namespace Agar.net
 
         public void Update()
         {
-            /*
-            if (_ws->getReadyState() != easywsclient::WebSocket::CLOSED) // Websocket connection loop
+            _dataMutex.WaitOne();
+            while(_dataQueue.Count != 0)
             {
-                _ws->poll();
-                bool hasData = false;
-
-                do
-                {
-                    hasData = false;
-
-                    _ws->dispatchBinary([this, &hasData](const std::vector<uint8_t>&inData)
-            {
-                        process(ByteBuffer(inData));
-                        hasData = true;
-                    });
-
-                } while (hasData);
-
+                Process(_dataQueue.Dequeue());
             }
-            */
+            _dataMutex.ReleaseMutex();
         }
 
         public bool IsOpen()
@@ -155,64 +150,71 @@ namespace Agar.net
         // handlers
         private void Process(byte[] data)
         {
-            Console.WriteLine("Received data !");
-            
+            //Console.WriteLine("Received data !");
 
-            /*
-            uint32 opcode = static_cast<int>(data.get());
+            MemoryStream ms = new MemoryStream(data);
+            BinaryReader reader = new BinaryReader(ms, new UnicodeEncoding());
+
+
+            uint opcode = reader.ReadByte();
             switch (opcode)
             {
                 case 16: // Node update
-                    handleUpdateCells(data);
+                    handleUpdateCells(reader);
                     break;
 
-                case 17: // Update client in spectator mode
-                    std::cout << "Unhandled spectator client update" << std::endl;
+                case 17: // Update camera in spectator mode
+                    handleSpectateCameraMove(reader);
                     break;
 
                 case 32: // Add Client cell
-                    handleAddCell(data);
+                    handleAddCell(reader);
                     break;
 
-
                 case 49: // (FFA) Leaderboard Update
-                    handleFFALeaderboardUpdate(data);
+                    handleFFALeaderboardUpdate(reader);
                     break;
 
                 case 50: // (Team) Leaderboard Update
-                    handleTeamLeaderboardUpdate(data);
+                    handleTeamLeaderboardUpdate(reader);
                     break;
 
                 case 64: // World size message
-                    handleWorldInfo(data);
+                    handleWorldInfo(reader);
                     break;
 
                 default:
-                    std::cout << "Unknown opcode : " << opcode << std::endl;
+                    Console.WriteLine("Unknown opcode : " + opcode);
 
                     break;
             }
-            */
+            
         }
 
-        private void handleWorldInfo(byte[] data)
+        private void handleWorldInfo(BinaryReader data)
         {
-            /*
-            std::cout << "World Info";
+            float worldX = (float)data.ReadDouble();
+            float worldY = (float)data.ReadDouble();
+            float worldW = (float)data.ReadDouble();
+            float worldH = (float)data.ReadDouble();
 
-            double worldX = data.getDouble();
-            double worldY = data.getDouble();
-            double worldW = data.getDouble();
-            double worldH = data.getDouble();
+            _world.SetPosition(new Vector2f(worldX, worldY));
+            _world.SetSize(new Vector2f(worldW, worldH));
 
-            _world->setPosition(sf::Vector2f(worldX, worldY));
-            _world->setSize(sf::Vector2f(worldW, worldH));
-
-            std::cout << " # " << worldX << " # " << worldY << " # " << worldW << " # " << worldH << std::endl;
-            */
+            Console.WriteLine("World info : # " + worldX + " # " + worldY + " # " + worldW + " # " + worldH);
         }
 
-        private void handleFFALeaderboardUpdate(byte[] data)
+        private void handleSpectateCameraMove(BinaryReader data)
+        {
+            float x = data.ReadSingle();
+            float y = data.ReadSingle();
+            float ratio = data.ReadSingle();
+
+            _world.SetView(x, y, ratio);
+            //Console.WriteLine("Camera update : " + x + " - " + y + " : " + ratio);
+        }
+
+        private void handleFFALeaderboardUpdate(BinaryReader data)
         {
             /*
             uint32 count = data.getInt();
@@ -225,7 +227,7 @@ namespace Agar.net
             */
         }
 
-        private void handleTeamLeaderboardUpdate(byte[] data)
+        private void handleTeamLeaderboardUpdate(BinaryReader data)
         {
             /*
             uint32 teamCount = data.getInt();
@@ -240,75 +242,77 @@ namespace Agar.net
             */
         }
 
-        private void handleAddCell(byte[] data)
+        private void handleAddCell(BinaryReader data)
         {
             /*
             std::cout << "Add new cell" << std::endl;
             */
         }
 
-        private void handleUpdateCells(byte[] data)
+        private void handleUpdateCells(BinaryReader data)
         {
-            /*
+            
             // Mergers
-            uint32 mergeCount = data.getShort();
-            for (uint32 i = 0; i < mergeCount; ++i)
+            ushort mergeCount = data.ReadUInt16();
+            for (uint i = 0; i < mergeCount; ++i)
             {
-                uint32 hunter = data.getInt();
-                uint32 prey = data.getInt();
-                _world->removeCell(prey);
+                uint hunter = data.ReadUInt32();
+                uint prey = data.ReadUInt32();
+                _world.RemoveCell(prey);
                 //_world->removeCell(hunter);
             }
 
             // Updates
-            uint32 id;
-            while (id = data.getInt())
+            uint id;
+            while ((id = data.ReadUInt32()) != 0)
             {
-                Cell* c = _world->getCell(id);
-                if (!c)
-                    c = _world->addCell(id);
+                Cell c = _world.GetCell(id);
+                if (c == null)
+                    c = _world.AddCell(id);
 
-                uint16 x, y, size;
-                x = data.getShort();
-                y = data.getShort();
-                size = data.getShort();
+                ushort x, y, size;
+                x = data.ReadUInt16();
+                y = data.ReadUInt16();
+                size = data.ReadUInt16();
 
-                uint8 r, g, b, flags;
-                r = data.get();
-                g = data.get();
-                b = data.get();
-                flags = data.get();
+                byte r, g, b, flags;
+                r = data.ReadByte();
+                g = data.ReadByte();
+                b = data.ReadByte();
+                flags = data.ReadByte();
 
-                if (flags & 2)
-                    data.setReadPos(data.getReadPos() + 4);
-                if (flags & 4)
-                    data.setReadPos(data.getReadPos() + 8);
-                if (flags & 8)
-                    data.setReadPos(data.getReadPos() + 16);
+                if ((flags & 2) != 0)
+                    data.ReadBytes(4);
+                if ((flags & 4) != 0)
+                    data.ReadBytes(8);
+                if ((flags & 8) != 0)
+                    data.ReadBytes(16);
 
-                std::string name = data.getUTF16String();
+                ushort t;
+                string name = "";
+                while ((t = data.ReadUInt16()) != 0)
+                {
+                    name += new string((char)t, 1);
+                }
 
-                c->setPosition(sf::Vector2i(x, y));
-                c->setSize(size);
-                c->setColor(sf::Color(r, g, b));
-                c->setName(name);
 
+                c.SetPosition(new Vector2i(x, y));
+                c.SetMass(size);
+                c.SetColor(new Color(r, g, b, 255));
+                c.SetName(name);
 
-                //debug
-
-                _world->updateZone(x, y, size);
             }
 
 
             //Death
-            uint32 deathCount = data.getShort();
-            for (uint32 i = 0; i < deathCount; ++i)
+            uint deathCount = data.ReadUInt32();
+            for (uint i = 0; i < deathCount; ++i)
             {
-                uint32 id = data.getInt();
-                _world->removeCell(id);
+                uint did = data.ReadUInt32();
+                _world.RemoveCell(did);
             }
 
-            */
+            
         }
 
 
@@ -316,6 +320,7 @@ namespace Agar.net
 
         public void Spawn(string name = "")
         {
+
             /*
             if (!_open)
                 return;
@@ -334,16 +339,15 @@ namespace Agar.net
 
         public void Spectate()
         {
-            /*
+            
             if (!_open)
                 return;
 
-            ByteBuffer buf;
-            buf.put((uint8)1);
-            _ws->sendBinary(buf.asVector());
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter writer = new BinaryWriter(ms);
 
-            std::cout << "spectating" << std::endl;
-            */
+            writer.Write((byte)1);
+            _ws.Send(ms.ToArray());
         }
 
 
