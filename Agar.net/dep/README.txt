@@ -1,0 +1,1 @@
+Copy the files in this folder next to Agar.net.exe
