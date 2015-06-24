@@ -48,10 +48,24 @@ namespace Agar
             playing = spectating = false;
         }
 
+        public void FindSession(string mode, string region)
+        {
+            _sess.FindSession(mode, region);
+
+            playing = false;
+            spectating = false;
+            cells.Clear();
+            ownedCells.Clear();
+
+            _viewX = _viewY = 5500;
+            _viewRatio = 1;
+            UpdateView();
+        }
+
 
         public void Run()
         {
-            _sess.FindSession(Mode.Experimental, Region.EU);
+            FindSession(Mode.FFA, Region.EU);
            
             _window.SetVisible(true);
             _window.Closed += new EventHandler(OnClosed);
@@ -106,6 +120,19 @@ namespace Agar
                 _sess.Spawn();
                 playing = true;
                 spectating = false;
+            }
+
+            if (e.Code == Keyboard.Key.Num1)
+            {
+                FindSession(Mode.FFA, Region.EU);
+            }
+            if (e.Code == Keyboard.Key.Num2)
+            {
+                FindSession(Mode.Team, Region.EU);
+            }
+            if (e.Code == Keyboard.Key.Num3)
+            {
+                FindSession(Mode.Experimental, Region.EU);
             }
         }
 

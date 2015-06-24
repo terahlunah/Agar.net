@@ -38,6 +38,16 @@ namespace Agar
         public void FindSession(string mode, string region)
         {
 
+            if (_open && _ws != null)
+            {
+                _dataQueue.Clear();
+                _ws.CloseAsync();
+                _ws = null;
+                _open = false;
+            }
+                
+
+
             WebRequest request = WebRequest.Create("http://m.agar.io");
             request.Method = "POST";
 
@@ -66,11 +76,16 @@ namespace Agar
         {
             _ws = new WebSocket("ws://"+url);
             _ws.Origin = "http://agar.io";
+            _ws.Log.Level = LogLevel.None;
 
             _ws.OnMessage += (sender, e) => {
                 _dataMutex.WaitOne();
                 _dataQueue.Enqueue(e.RawData);
                 _dataMutex.ReleaseMutex();
+            };
+
+            _ws.OnError += (sender, e) => {
+                Console.WriteLine(e.Message);
             };
 
             _ws.OnOpen += (sender, e) =>
@@ -118,6 +133,8 @@ namespace Agar
 
         public void Update()
         {
+            if(_open)
+
             _dataMutex.WaitOne();
             while(_dataQueue.Count != 0)
             {
