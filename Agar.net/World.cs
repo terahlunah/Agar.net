@@ -6,7 +6,7 @@ using SFML.System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Agar.net
+namespace Agar
 {
     class World
     {

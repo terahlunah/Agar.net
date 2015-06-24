@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Agar.net
+namespace Agar
 {
 
     class Program

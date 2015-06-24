@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using SFML.System;
 using System.Threading;
 
-namespace Agar.net
+namespace Agar
 {
     
     class Session 
@@ -105,7 +105,7 @@ namespace Agar.net
                 BinaryWriter writer = new BinaryWriter(ms);
 
                 writer.Write((byte)255);
-                writer.Write(2207389747);
+                writer.Write(154669603);
                 Send(ms.ToArray());
             }
 
