@@ -8,48 +8,64 @@ namespace Agar
 {
     class Cell
     {
-        private uint _id;
-        public Vector2i _position;
-        private uint _mass;
-        private Color _color;
-        public string _name;
-        private float _radius;
-
         public Cell(uint id)
         {
-            _id = id;
-            _mass = 1;
+            this.id = id;
+            mass = 1;
+        }
+
+        private uint mass;
+        public uint Mass
+        {
+            get { return mass; }
+            set { mass = value; }
+        }
+
+        private Vector2i position;
+        public Vector2i Position
+        {
+            get { return position; }
+            set { position = value; }
+        }
+
+        private uint id;
+        public uint Id
+        {
+            get { return id; }
+        }
+
+        private string name;
+        public string Name
+        {
+            get { return name; }
+            set { name = value; }
+        }
+
+        private Color color;
+        public Color Color
+        {
+            get { return color; }
+            set { color = value; }
         }
 
         public void Draw(RenderWindow window)
         {
-            CircleShape shape = new CircleShape(_radius, (uint)_radius);
-            shape.FillColor = _color;
-            shape.Position = new Vector2f(_position.X - (ushort)_radius, _position.Y - (ushort)_radius);
+            // Draw outer dark circle
+            CircleShape shape = new CircleShape(mass, 40);
+            shape.FillColor = new Color((byte)Math.Max(color.R - 50, 0), (byte)Math.Max(color.G - 50, 0), (byte)Math.Max(color.B - 50, 0));
+            shape.Position = new Vector2f(position.X - (ushort)mass, position.Y - (ushort)mass);
+            window.Draw(shape);
 
+
+            float diff = 4 + mass / 50;
+            // Draw inner circle
+            shape.Radius -= diff;
+            shape.FillColor = color;
+            shape.Position = new Vector2f(position.X - (ushort)mass + diff, position.Y - (ushort)mass + diff);
             window.Draw(shape);
         }
 
-        public void SetMass(uint mass)
-        {
-            _mass = mass;
-            _radius = _mass;// / ((float)Math.PI * (float)Math.PI);
-        }
-
-        public void SetPosition(Vector2i position)
-        {
-            _position = position;
-        }
-
-        public void SetColor(Color color)
-        {
-            _color = color;
-        }
-
-        public void SetName(string name)
-        {
-            _name = name;
-        }
+        
 
     }
 }

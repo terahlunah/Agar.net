@@ -64,8 +64,6 @@ namespace Agar
 
         public void ConnectToServer(string url, string key)
         {
-            Console.WriteLine("opening connection to " + url);
-
             _ws = new WebSocket("ws://"+url);
             _ws.Origin = "http://agar.io";
 
@@ -77,7 +75,6 @@ namespace Agar
 
             _ws.OnOpen += (sender, e) =>
             {
-                Console.WriteLine("opened");
                 _open = true;
 
                 this.SendHandShake(key);
@@ -168,7 +165,7 @@ namespace Agar
                     break;
 
                 case 32: // Add Client cell
-                    handleAddCell(reader);
+                    handleSpawnCell(reader);
                     break;
 
                 case 49: // (FFA) Leaderboard Update
@@ -211,7 +208,6 @@ namespace Agar
             float ratio = data.ReadSingle();
 
             _world.SetView(x, y, ratio);
-            //Console.WriteLine("Camera update : " + x + " - " + y + " : " + ratio);
         }
 
         private void handleFFALeaderboardUpdate(BinaryReader data)
@@ -242,11 +238,11 @@ namespace Agar
             */
         }
 
-        private void handleAddCell(BinaryReader data)
+        private void handleSpawnCell(BinaryReader data)
         {
-            /*
-            std::cout << "Add new cell" << std::endl;
-            */
+
+            _world.AddOwnedCell(data.ReadUInt32());
+            
         }
 
         private void handleUpdateCells(BinaryReader data)
@@ -270,10 +266,10 @@ namespace Agar
                 if (c == null)
                     c = _world.AddCell(id);
 
-                ushort x, y, size;
+                ushort x, y, mass;
                 x = data.ReadUInt16();
                 y = data.ReadUInt16();
-                size = data.ReadUInt16();
+                mass = data.ReadUInt16();
 
                 byte r, g, b, flags;
                 r = data.ReadByte();
@@ -296,10 +292,10 @@ namespace Agar
                 }
 
 
-                c.SetPosition(new Vector2i(x, y));
-                c.SetMass(size);
-                c.SetColor(new Color(r, g, b, 255));
-                c.SetName(name);
+                c.Position = new Vector2i(x, y);
+                c.Mass = mass;
+                c.Color = new Color(r, g, b, 255);
+                c.Name = name;
 
             }
 
@@ -320,26 +316,19 @@ namespace Agar
 
         public void Spawn(string name = "")
         {
-
-            /*
             if (!_open)
                 return;
 
-            ByteBuffer buf;
-            buf.put((uint8)0);
-            auto enc = sf::String(name).toUtf16();
-            for (uint32 i = 0; i < enc.length(); ++i)
-                buf.putShort(enc[i]);
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter writer = new BinaryWriter(ms);
 
-            _ws->sendBinary(buf.asVector());
-
-            std::cout << "joined" << std::endl;
-            */
+            writer.Write((byte)0);
+            writer.Write(Encoding.Unicode.GetBytes(name));
+            _ws.Send(ms.ToArray());
         }
 
         public void Spectate()
         {
-            
             if (!_open)
                 return;
 
@@ -350,9 +339,45 @@ namespace Agar
             _ws.Send(ms.ToArray());
         }
 
+        public void SendAim(double x, double y)
+        {
+            if (!_open)
+                return;
+
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter writer = new BinaryWriter(ms);
+
+            writer.Write((byte)16);
+            writer.Write(x);
+            writer.Write(y);
+            writer.Write(0);
+            _ws.Send(ms.ToArray());
+        }
+
+        public void SendEjectMass()
+        {
+            if (!_open)
+                return;
+
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter writer = new BinaryWriter(ms);
+
+            writer.Write((byte)21);
+            _ws.Send(ms.ToArray());
+        }
+
+        public void SendSplit()
+        {
+            if (!_open)
+                return;
+
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter writer = new BinaryWriter(ms);
+
+            writer.Write((byte)17);
+            _ws.Send(ms.ToArray());
+        }
 
 
-
-   
     }
 }

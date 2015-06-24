@@ -12,15 +12,17 @@ It's a work in progress, so don't expect everything to work !
 
 - Connection to a server
 - Selection of the game mode
-- Spectating mode (press 's')
+- Spectating (press 's')
+- Playing (press 'p' to spawn, left click to eject mass, right click to split)
 
 ## ToDo
 
 - Clean the code !
 - Finish the reverse engineering of the net protocol
-- Add texts (names, score, leaderbord, ...)
-- Add input to allow playing (instead of just watching atm)
-- Interpolation (to smooth movements, camera included)
+- Ajust camera zoom / window size
+- Add texts (names, score, leaderboard, ...)
+- Interpolating  movements
+- Smooth camera
 - **Add scripting**
 
 

@@ -14,9 +14,13 @@ namespace Agar
         private Session _sess;
         private Vector2f _position;
         private Vector2f _size;
-        volatile private Dictionary<uint, Cell> _cells;
+
+        private Dictionary<uint, Cell> cells;
+        private List<uint> ownedCells;
 
         private float _viewX, _viewY, _viewRatio;
+
+        private bool playing, spectating;
 
         public World()
         {
@@ -29,23 +33,21 @@ namespace Agar
             ContextSettings settings = new ContextSettings();
             settings.AntialiasingLevel = 8;
             _window = new RenderWindow(new VideoMode(1600, 800), "Agar.net", Styles.Default, settings);
+
             _window.KeyPressed += new EventHandler<KeyEventArgs>(OnKeyPressed);
+            _window.MouseButtonPressed += new EventHandler<MouseButtonEventArgs>(OnMouseButtonPressed);
 
             _sess = new Session(this);
-            _cells = new Dictionary<uint, Cell>();
+            cells = new Dictionary<uint, Cell>();
+            ownedCells = new List<uint>();
             _size = new Vector2f(10000, 10000);
             _viewX = _viewY = 5500;
             _viewRatio = 1;
             UpdateView();
+
+            playing = spectating = false;
         }
 
-        public void OnKeyPressed(object sender, KeyEventArgs e)
-        {
-            if(e.Code == Keyboard.Key.S)
-            {
-                _sess.Spectate();
-            }
-        }
 
         public void Run()
         {
@@ -68,7 +70,55 @@ namespace Agar
         private void Update()
         {
             _window.DispatchEvents();
+
+            UpdateMouse();
+            UpdateView();
+
             _sess.Update();
+        }
+
+        private void UpdateMouse()
+        {
+            if(playing)
+            {
+                Vector2f pos = (Vector2f)Mouse.GetPosition(_window);
+
+                float x = pos.X - (_window.Size.X / 2) + _viewX;
+                float y = pos.Y - (_window.Size.Y / 2) + _viewY;
+
+                x = Math.Max(Math.Min(x, _size.X), 0);
+                y = Math.Max(Math.Min(y, _size.Y), 0);
+
+                _sess.SendAim(x, y);
+            }
+        }
+
+        public void OnKeyPressed(object sender, KeyEventArgs e)
+        {
+            if (e.Code == Keyboard.Key.S)
+            {
+                _sess.Spectate();
+                playing = false;
+                spectating = true;
+            }
+            if (e.Code == Keyboard.Key.P)
+            {
+                _sess.Spawn();
+                playing = true;
+                spectating = false;
+            }
+        }
+
+        public void OnMouseButtonPressed(object sender, MouseButtonEventArgs e)
+        {
+            if(e.Button == Mouse.Button.Left)
+            {
+                _sess.SendEjectMass();
+            }
+            if (e.Button == Mouse.Button.Right)
+            {
+                _sess.SendSplit();
+            }
         }
 
         private void Display()
@@ -77,7 +127,7 @@ namespace Agar
 
             DrawGrid();
 
-            foreach (var c in _cells)
+            foreach (var c in cells)
                 c.Value.Draw(_window);
 
             _window.Display();
@@ -128,31 +178,44 @@ namespace Agar
 
         public Cell AddCell(uint id)
         {
-            _cells[id] = new Cell(id);
-            return _cells[id];
+            cells[id] = new Cell(id);
+            return cells[id];
         }
 
         public Cell GetCell(uint id)
         {
 
-            if (_cells.ContainsKey(id))
-                return _cells[id];
+            if (cells.ContainsKey(id))
+                return cells[id];
             else
                 return null;
         }
 
         public void RemoveCell(uint id)
         {
-            _cells.Remove(id);
+            cells.Remove(id);
+            ownedCells.Remove(id);
+        }
+
+        public void AddOwnedCell(uint id)
+        {
+            ownedCells.Add(id);
         }
 
 
         private void UpdateView()
         {
+            if (ownedCells.Count != 0)
+            {
+                Vector2i pos = GetCell(ownedCells[0]).Position;
+                _viewX = pos.X;
+                _viewY = pos.Y;
+            }
+
             View view = _window.GetView();
-            view.Size =new Vector2f(2000, 1000);
-            view.Center = new Vector2f (_viewX, _viewY);
-            view.Zoom(1/_viewRatio);
+            view.Size = new Vector2f(2000, 1000);
+            view.Center = new Vector2f(_viewX, _viewY);
+            view.Zoom(1 / _viewRatio);
             _window.SetView(view);
         }
 
