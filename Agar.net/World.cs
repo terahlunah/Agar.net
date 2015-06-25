@@ -237,7 +237,7 @@ namespace Agar
                 Cell c = GetCell(ownedCells[0]);
                 if (c != null)
                 {
-                    Vector2i pos = GetCell(ownedCells[0]).Position;
+                    Vector2i pos = c.Position;
                     _viewX = pos.X;
                     _viewY = pos.Y;
                 }
