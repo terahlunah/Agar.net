@@ -234,9 +234,13 @@ namespace Agar
         {
             if (ownedCells.Count != 0)
             {
-                Vector2i pos = GetCell(ownedCells[0]).Position;
-                _viewX = pos.X;
-                _viewY = pos.Y;
+                Cell c = GetCell(ownedCells[0]);
+                if (c != null)
+                {
+                    Vector2i pos = GetCell(ownedCells[0]).Position;
+                    _viewX = pos.X;
+                    _viewY = pos.Y;
+                }
             }
 
             View view = _window.GetView();
