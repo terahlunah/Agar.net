@@ -1,4 +1,4 @@
-# Agar.net
+# Agar.net (Not up to date!)
 
 A client for [agar.io](http://agar.io) written in C#
 
